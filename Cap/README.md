@@ -111,11 +111,12 @@ cat /root/root.txt
 **Result:** Root flag obtained. ✅
 
 
-## 6. Lessons Learned
+## 7. Lessons Learned
 
-- **IDOR:** never trust a client-supplied object ID; the server must check ownership/authorisation on every request.
-- **Cleartext protocols:** FTP exposes credentials to anyone who can read the traffic. The capture tool effectively sniffed and stored a plaintext login.
-- **Password reuse:** the same password worked across FTP and SSH, turning a file-access leak into a full shell.
+- **IDOR:** never trust a client-supplied object ID; the server must enforce ownership/authorisation on every request. Sequential IDs make enumeration trivial.
+- **Cleartext protocols:** FTP exposes credentials to anyone who can read the traffic. The capture tool effectively sniffed and stored a plaintext login, which the IDOR then made retrievable.
+- **Password reuse:** the same password worked across FTP and SSH, turning a file-access leak into a full interactive shell.
+- **Linux capabilities:** capabilities are a finer-grained alternative to setuid-root binaries, but a misassigned one (`cap_setuid` on an interpreter) is equivalent to handing out root. Always audit with `getcap -r /`.
 
 ## 7. Tools Used
 
@@ -123,3 +124,8 @@ cat /root/root.txt
 - curl
 - tshark / Wireshark
 - ssh
+- getcap
+
+## 8. Attack Chain Summary
+
+IDOR on `/download/<id>` → cleartext FTP credentials from PCAP → SSH access via password reuse (user flag) → `cap_setuid` on Python for privilege escalation (root flag).
